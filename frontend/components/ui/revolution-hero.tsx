@@ -44,7 +44,7 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
     >
       {/* Animated gradient orbs */}
       <motion.div
-        className="absolute top-1/4 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-sky-cyan-500/20 via-soft-aqua-400/10 to-transparent blur-3xl"
+        className="absolute top-1/4 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-aura-purple/20 via-aura-magenta/10 to-transparent blur-3xl"
         style={{ x: orbX, y: orbY }}
         animate={{
           scale: [1, 1.1, 1],
@@ -53,7 +53,7 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-1/4 -right-32 w-[400px] h-[400px] rounded-full bg-gradient-to-tl from-purple-500/15 via-sky-cyan-400/10 to-transparent blur-3xl"
+        className="absolute bottom-1/4 -right-32 w-[400px] h-[400px] rounded-full bg-gradient-to-tl from-aura-gold/15 via-aura-purple/10 to-transparent blur-3xl"
         style={{ x: orbX2, y: orbY2 }}
         animate={{
           scale: [1.1, 1, 1.1],
@@ -83,8 +83,8 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
               transition={{ duration: 0.6 }}
               className="inline-flex mb-8"
             >
-              <span className="relative inline-flex items-center gap-2 text-xs font-medium text-sky-cyan-300 bg-sky-cyan-500/10 border border-sky-cyan-500/20 rounded-full px-4 py-2 backdrop-blur-xl">
-                <span className="absolute -inset-px bg-gradient-to-r from-sky-cyan-500/20 to-purple-500/20 rounded-full blur-sm" />
+              <span className="relative inline-flex items-center gap-2 text-xs font-medium text-aura-purple bg-aura-purple/10 border border-aura-purple/20 rounded-full px-4 py-2 backdrop-blur-xl">
+                <span className="absolute -inset-px bg-gradient-to-r from-aura-purple/20 to-aura-magenta/20 rounded-full blur-sm" />
                 <Sparkles className="w-3.5 h-3.5 relative" />
                 <span className="relative">Next-Gen Task Management</span>
               </span>
@@ -99,11 +99,11 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
             >
               <span className="text-white">Evolve Your </span>
               <span className="relative">
-                <span className="bg-gradient-to-r from-sky-cyan-400 via-soft-aqua-300 to-sky-cyan-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                <span className="bg-gradient-to-r from-aura-purple via-aura-magenta to-aura-gold bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
                   Productivity
                 </span>
                 <motion.span
-                  className="absolute -bottom-2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-sky-cyan-500 to-transparent"
+                  className="absolute -bottom-2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-aura-purple to-transparent"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ duration: 0.8, delay: 0.8 }}
@@ -130,7 +130,7 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
             >
               {!isAuthenticated ? (
                 <>
-                  <Button asChild size="lg" className="relative overflow-hidden bg-gradient-to-r from-sky-cyan-500 to-soft-aqua-400 text-white border-0 shadow-lg shadow-sky-cyan-500/25 hover:shadow-sky-cyan-500/40 transition-shadow group">
+                  <Button asChild size="lg" className="relative overflow-hidden bg-gradient-to-r from-aura-purple to-aura-magenta text-white border-0 shadow-lg shadow-aura-purple/25 hover:shadow-aura-purple/40 transition-shadow group">
                     <Link href="/login" className="flex items-center gap-2">
                       <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                       Get Started Free
@@ -142,7 +142,7 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
                   </Button>
                 </>
               ) : (
-                <Button asChild size="lg" className="relative overflow-hidden bg-gradient-to-r from-sky-cyan-500 to-soft-aqua-400 text-white border-0 shadow-lg shadow-sky-cyan-500/25 hover:shadow-sky-cyan-500/40 transition-shadow group">
+                <Button asChild size="lg" className="relative overflow-hidden bg-gradient-to-r from-aura-purple to-aura-magenta text-white border-0 shadow-lg shadow-aura-purple/25 hover:shadow-aura-purple/40 transition-shadow group">
                   <Link href="/todo" className="flex items-center gap-2">
                     <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                     Go to Tasks
@@ -164,11 +164,11 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
                 <span>Always Free</span>
               </div>
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-sky-cyan-400" />
+                <Shield className="w-4 h-4 text-aura-purple" />
                 <span>Secure & Private</span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-sky-cyan-400" />
+                <Zap className="w-4 h-4 text-aura-gold" />
                 <span>Lightning Fast</span>
               </div>
             </motion.div>
@@ -185,11 +185,11 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
               {/* Main card - Demo Video */}
               <motion.div
                 className="col-span-2 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 backdrop-blur-xl overflow-hidden"
-                whileHover={{ scale: 1.02, borderColor: "rgba(56, 189, 248, 0.3)" }}
+                whileHover={{ scale: 1.02, borderColor: "rgba(153, 41, 234, 0.3)" }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex items-center gap-3 p-4 border-b border-white/10">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-cyan-500 to-soft-aqua-400 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-aura-purple to-aura-magenta flex items-center justify-center">
                     <Clock className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -214,24 +214,24 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
 
               {/* Stats card */}
               <motion.div
-                className="p-5 rounded-2xl bg-gradient-to-br from-sky-cyan-500/20 to-sky-cyan-500/5 border border-sky-cyan-500/20 backdrop-blur-xl"
+                className="p-5 rounded-2xl bg-gradient-to-br from-aura-purple/20 to-aura-purple/5 border border-aura-purple/20 backdrop-blur-xl"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
                 <p className="text-3xl font-bold text-white mb-1">94%</p>
-                <p className="text-sky-cyan-300 text-sm">Completion Rate</p>
+                <p className="text-aura-purple text-sm">Completion Rate</p>
               </motion.div>
 
               {/* Tags card */}
               <motion.div
-                className="p-5 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 backdrop-blur-xl"
+                className="p-5 rounded-2xl bg-gradient-to-br from-aura-magenta/20 to-aura-magenta/5 border border-aura-magenta/20 backdrop-blur-xl"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-2 py-1 text-xs rounded-full bg-purple-500/30 text-purple-300">Work</span>
-                  <span className="px-2 py-1 text-xs rounded-full bg-sky-cyan-500/30 text-sky-cyan-300">Personal</span>
-                  <span className="px-2 py-1 text-xs rounded-full bg-emerald-500/30 text-emerald-300">Health</span>
+                  <span className="px-2 py-1 text-xs rounded-full bg-aura-purple/30 text-aura-purple">Work</span>
+                  <span className="px-2 py-1 text-xs rounded-full bg-aura-magenta/30 text-aura-magenta">Personal</span>
+                  <span className="px-2 py-1 text-xs rounded-full bg-aura-gold/30 text-aura-gold">Health</span>
                 </div>
                 <p className="text-white/50 text-sm mt-2">Smart Tags</p>
               </motion.div>
@@ -239,12 +239,12 @@ export default function RevolutionHero({ isAuthenticated = false }: RevolutionHe
 
             {/* Floating decorative elements */}
             <motion.div
-              className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-gradient-to-br from-sky-cyan-500/30 to-transparent blur-xl"
+              className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-gradient-to-br from-aura-purple/30 to-transparent blur-xl"
               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
               transition={{ duration: 4, repeat: Infinity }}
             />
             <motion.div
-              className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/30 to-transparent blur-xl"
+              className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-gradient-to-br from-aura-magenta/30 to-transparent blur-xl"
               animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 0.8, 0.5] }}
               transition={{ duration: 5, repeat: Infinity }}
             />

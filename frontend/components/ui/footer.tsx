@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Github, Linkedin, Sun, Moon, ArrowUp, Heart } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Github, Linkedin, Moon, ArrowUp, Heart } from "lucide-react";
 
 function handleScrollTop() {
   window.scroll({
@@ -12,36 +11,19 @@ function handleScrollTop() {
   });
 }
 
-const ThemeToggle = () => {
-  const { setTheme, theme } = useTheme();
-
+const ThemeIndicator = () => {
   return (
     <div className="flex items-center justify-center">
       <div className="flex items-center rounded-full border border-white/20 backdrop-blur-sm">
-        <button
-          onClick={() => setTheme("light")}
-          className={`rounded-full p-2 transition-colors ${
-            theme === "light" ? "bg-sky-cyan-500 text-white" : "text-white/60 hover:text-white"
-          }`}
-        >
-          <Sun className="h-5 w-5" strokeWidth={1.5} />
-          <span className="sr-only">Light mode</span>
-        </button>
-
         <button type="button" onClick={handleScrollTop} className="px-3 text-white/60 hover:text-white transition-colors">
           <ArrowUp className="h-4 w-4" />
           <span className="sr-only">Scroll to top</span>
         </button>
 
-        <button
-          onClick={() => setTheme("dark")}
-          className={`rounded-full p-2 transition-colors ${
-            theme === "dark" ? "bg-sky-cyan-500 text-white" : "text-white/60 hover:text-white"
-          }`}
-        >
+        <div className="rounded-full p-2 bg-aura-purple text-white">
           <Moon className="h-5 w-5" strokeWidth={1.5} />
           <span className="sr-only">Dark mode</span>
-        </button>
+        </div>
       </div>
     </div>
   );
@@ -92,7 +74,7 @@ const socialLinks = [
   },
 ];
 
-const Underline = "hover:-translate-y-1 border border-white/20 rounded-xl p-2.5 transition-all hover:border-sky-cyan-500/50 hover:bg-white/5 backdrop-blur-sm";
+const Underline = "hover:-translate-y-1 border border-white/20 rounded-xl p-2.5 transition-all hover:border-aura-purple/50 hover:bg-white/5 backdrop-blur-sm";
 
 export function Footer() {
   return (
@@ -108,7 +90,7 @@ export function Footer() {
             <Link href="/" className="inline-block mb-4">
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="text-2xl font-bold bg-gradient-to-r from-sky-cyan-400 via-soft-aqua-400 to-misty-white bg-clip-text text-transparent"
+                className="text-2xl font-bold bg-gradient-to-r from-aura-purple via-aura-magenta to-aura-gold bg-clip-text text-transparent"
               >
                 Ary's Todo
               </motion.div>
@@ -127,7 +109,7 @@ export function Footer() {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="text-sm text-white/50 hover:text-sky-cyan-400 transition-colors"
+                      className="text-sm text-white/50 hover:text-aura-purple transition-colors"
                     >
                       {item.name}
                     </Link>
@@ -154,21 +136,21 @@ export function Footer() {
                 target="_blank"
                 className={Underline}
               >
-                <link.icon className="h-5 w-5 text-white/60 hover:text-sky-cyan-400 transition-colors" strokeWidth={1.5} />
+                <link.icon className="h-5 w-5 text-white/60 hover:text-aura-purple transition-colors" strokeWidth={1.5} />
               </Link>
             ))}
           </div>
 
-          {/* Theme toggle */}
-          <ThemeToggle />
+          {/* Theme indicator */}
+          <ThemeIndicator />
 
           {/* Copyright */}
           <div className="flex items-center gap-1 text-sm text-white/40">
             <span>© {new Date().getFullYear()}</span>
             <span>Made with</span>
-            <Heart className="h-4 w-4 text-soft-aqua-400 mx-1 animate-pulse" fill="currentColor" />
+            <Heart className="h-4 w-4 text-aura-magenta mx-1 animate-pulse" fill="currentColor" />
             <span>by</span>
-            <span className="text-white/60 hover:text-sky-cyan-400 transition-colors cursor-pointer font-medium">
+            <span className="text-white/60 hover:text-aura-purple transition-colors cursor-pointer font-medium">
               Ary
             </span>
           </div>

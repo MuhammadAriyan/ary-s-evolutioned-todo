@@ -1,5 +1,6 @@
 """Application configuration using Pydantic Settings."""
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import List
 
 
@@ -17,8 +18,15 @@ class Settings(BaseSettings):
     # Database
     database_url: str
 
-    # CORS
+    # CORS - accepts comma-separated string or list
     cors_origins: List[str] = ["http://localhost:3000"]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     class Config:
         env_file = ".env"

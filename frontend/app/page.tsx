@@ -45,7 +45,7 @@ function FeaturesSection() {
         >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Everything you need to stay{' '}
-            <span className="bg-gradient-to-r from-sky-cyan-400 via-soft-aqua-400 to-misty-white bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-aura-purple via-aura-magenta to-aura-gold bg-clip-text text-transparent">
               organized
             </span>
           </h2>
@@ -63,10 +63,10 @@ function FeaturesSection() {
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              className="group p-6 rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl hover:border-sky-cyan-500/30 transition-all"
+              className="group p-6 rounded-2xl border border-white/10 bg-black/30 backdrop-blur-xl hover:border-aura-purple/30 transition-all"
             >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-cyan-500/20 to-soft-aqua-400/20 flex items-center justify-center mb-4 group-hover:from-sky-cyan-500/30 group-hover:to-soft-aqua-400/30 transition-all">
-                <feature.icon className="w-6 h-6 text-sky-cyan-400" strokeWidth={1.5} />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-aura-purple/20 to-aura-magenta/20 flex items-center justify-center mb-4 group-hover:from-aura-purple/30 group-hover:to-aura-magenta/30 transition-all">
+                <feature.icon className="w-6 h-6 text-aura-purple" strokeWidth={1.5} />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
               <p className="text-white/50 text-sm">{feature.description}</p>
@@ -91,8 +91,8 @@ function CardStackSection() {
         >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Explore our{' '}
-            <span className="bg-gradient-to-r from-soft-aqua-400 to-misty-white bg-clip-text text-transparent">
-              features
+            <span className="bg-gradient-to-r from-aura-purple via-aura-magenta to-aura-gold bg-clip-text text-transparent">
+              products
             </span>
           </h2>
           <p className="text-white/50 max-w-2xl mx-auto">

@@ -14,19 +14,19 @@ const cardData = {
     title: "Smart Calendar",
     description: "Visual task planning with drag & drop",
     icon: Calendar,
-    gradient: "from-sky-cyan-500 to-sky-cyan-700",
+    gradient: "from-aura-purple to-aura-purple/70",
   },
   2: {
     title: "Tag System",
     description: "Organize with powerful filtering",
     icon: Tag,
-    gradient: "from-soft-aqua-400 to-sky-cyan-500",
+    gradient: "from-aura-magenta to-aura-purple",
   },
   3: {
     title: "Task Analytics",
     description: "Track your productivity trends",
     icon: Zap,
-    gradient: "from-misty-white to-soft-aqua-400",
+    gradient: "from-aura-gold to-aura-magenta",
   },
 }
 
@@ -86,7 +86,7 @@ function CardContent({ contentType }: { contentType: 1 | 2 | 3 }) {
           <span className="truncate font-medium text-white">{data.title}</span>
           <span className="text-white/50 text-sm">{data.description}</span>
         </div>
-        <button className="flex h-10 shrink-0 cursor-pointer select-none items-center gap-0.5 rounded-full bg-gradient-to-r from-sky-cyan-500 to-soft-aqua-400 pl-4 pr-3 text-sm font-medium text-white hover:opacity-90 transition-opacity">
+        <button className="flex h-10 shrink-0 cursor-pointer select-none items-center gap-0.5 rounded-full bg-gradient-to-r from-aura-purple to-aura-magenta pl-4 pr-3 text-sm font-medium text-white hover:opacity-90 transition-opacity">
           Explore
           <svg
             width="16"
@@ -137,7 +137,7 @@ function AnimatedCard({
         x: "-50%",
         bottom: 0,
       }}
-      className="absolute flex h-[280px] w-[324px] items-center justify-center overflow-hidden rounded-t-xl border border-white/10 bg-black/40 backdrop-blur-xl p-1 shadow-lg shadow-sky-cyan-500/10 will-change-transform sm:w-[512px]"
+      className="absolute flex h-[280px] w-[324px] items-center justify-center overflow-hidden rounded-t-xl border border-white/10 bg-black/40 backdrop-blur-xl p-1 shadow-lg shadow-aura-purple/10 will-change-transform sm:w-[512px]"
     >
       <CardContent contentType={card.contentType} />
     </motion.div>
@@ -172,7 +172,7 @@ export default function AnimatedCardStack() {
       <div className="relative z-10 -mt-px flex w-full items-center justify-center border-t border-white/10 py-4">
         <button
           onClick={handleAnimate}
-          className="flex h-9 cursor-pointer select-none items-center justify-center gap-1 overflow-hidden rounded-lg border border-white/20 bg-black/30 backdrop-blur-sm px-4 font-medium text-white/80 transition-all hover:bg-white/10 hover:border-sky-cyan-500/50 active:scale-[0.98]"
+          className="flex h-9 cursor-pointer select-none items-center justify-center gap-1 overflow-hidden rounded-lg border border-white/20 bg-black/30 backdrop-blur-sm px-4 font-medium text-white/80 transition-all hover:bg-white/10 hover:border-aura-purple/50 active:scale-[0.98]"
         >
           <Zap className="w-4 h-4 mr-1" />
           Next Feature
