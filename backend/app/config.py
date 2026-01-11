@@ -1,8 +1,5 @@
 """Application configuration using Pydantic Settings."""
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
-from typing import List
-import json
 
 
 class Settings(BaseSettings):
@@ -19,31 +16,14 @@ class Settings(BaseSettings):
     # Database
     database_url: str = ""
 
-    # CORS - accepts comma-separated string, JSON array, or single URL
-    cors_origins: List[str] = ["http://localhost:3000"]
+    # CORS - single URL or comma-separated URLs as string
+    cors_origins: str = "http://localhost:3000"
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        if v is None:
+    def get_cors_origins_list(self) -> list[str]:
+        """Parse cors_origins string into a list."""
+        if not self.cors_origins:
             return ["http://localhost:3000"]
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            v = v.strip()
-            # Try JSON array first
-            if v.startswith("["):
-                try:
-                    return json.loads(v)
-                except json.JSONDecodeError:
-                    pass
-            # Comma-separated
-            if "," in v:
-                return [origin.strip() for origin in v.split(",") if origin.strip()]
-            # Single URL
-            if v:
-                return [v]
-        return ["http://localhost:3000"]
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     class Config:
         env_file = ".env"
