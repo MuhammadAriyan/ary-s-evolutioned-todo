@@ -44,7 +44,7 @@ export default function SignupPage() {
 
   const handleGoogleSignup = async () => {
     try {
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3004"}/api/auth/signin/google`
+      window.location.href = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3004"}/api/auth/signin/google`
     } catch {
       setError("Failed to initiate Google signup")
     }

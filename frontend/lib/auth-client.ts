@@ -7,7 +7,7 @@ import { createAuthClient } from "better-auth/react"
 import { jwtClient } from "better-auth/client/plugins"
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:3004", // Better Auth runs on the frontend
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3004",
   plugins: [
     jwtClient(),
   ],
