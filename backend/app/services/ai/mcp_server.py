@@ -46,10 +46,10 @@ def add_task(
         dict with task_id and success status
     """
     if not title:
-        return {"success": False, "error": "Title is required"}
+        return {"error": "Title is required"}
 
     if len(title) > 200:
-        return {"success": False, "error": "Title must be 200 characters or less"}
+        return {"error": "Title must be 200 characters or less"}
 
     # Validate priority
     valid_priorities = ["High", "Medium", "Low"]
@@ -62,7 +62,7 @@ def add_task(
         try:
             parsed_due_date = date.fromisoformat(due_date)
         except ValueError:
-            return {"success": False, "error": "Invalid due date format. Use YYYY-MM-DD"}
+            return {"error": "Invalid due date format. Use YYYY-MM-DD"}
 
     try:
         session = next(get_session())
@@ -79,12 +79,12 @@ def add_task(
         session.refresh(task)
 
         return {
-            "success": True,
             "task_id": task.id,
-            "message": f"Task '{title}' created successfully"
+            "status": "created",
+            "title": task.title
         }
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 @mcp.tool()
@@ -94,7 +94,7 @@ def list_tasks(
     priority: str | None = None,
     tags: list[str] | None = None,
     limit: int = 50,
-) -> dict:
+) -> list[dict] | dict:
     """List tasks for the user with optional filters.
 
     Args:
@@ -105,7 +105,7 @@ def list_tasks(
         limit: Maximum number of tasks to return (default 50, max 100)
 
     Returns:
-        dict with list of tasks and count
+        list of task objects or error dict
     """
     limit = min(limit, 100)
 
@@ -127,25 +127,21 @@ def list_tasks(
         query = query.order_by(Task.created_at.desc()).limit(limit)
         tasks = session.exec(query).all()
 
-        return {
-            "success": True,
-            "count": len(tasks),
-            "tasks": [
-                {
-                    "id": task.id,
-                    "title": task.title,
-                    "description": task.description,
-                    "completed": task.completed,
-                    "priority": task.priority,
-                    "tags": task.tags,
-                    "due_date": task.due_date.isoformat() if task.due_date else None,
-                    "created_at": task.created_at.isoformat() if task.created_at else None,
-                }
-                for task in tasks
-            ]
-        }
+        return [
+            {
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "completed": task.completed,
+                "priority": task.priority,
+                "tags": task.tags,
+                "due_date": task.due_date.isoformat() if task.due_date else None,
+                "created_at": task.created_at.isoformat() if task.created_at else None,
+            }
+            for task in tasks
+        ]
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 @mcp.tool()
@@ -164,19 +160,19 @@ def complete_task(user_id: str, task_id: int) -> dict:
         task = session.get(Task, task_id)
 
         if not task or task.user_id != user_id:
-            return {"success": False, "error": "Task not found or access denied"}
+            return {"error": "Task not found or access denied"}
 
         if task.completed:
-            return {"success": True, "message": f"Task '{task.title}' is already completed"}
+            return {"task_id": task_id, "status": "already_completed", "title": task.title}
 
         task.completed = True
         task.updated_at = datetime.utcnow()
         session.add(task)
         session.commit()
 
-        return {"success": True, "message": f"Task '{task.title}' marked as completed"}
+        return {"task_id": task_id, "status": "completed", "title": task.title}
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 @mcp.tool()
@@ -195,19 +191,19 @@ def uncomplete_task(user_id: str, task_id: int) -> dict:
         task = session.get(Task, task_id)
 
         if not task or task.user_id != user_id:
-            return {"success": False, "error": "Task not found or access denied"}
+            return {"error": "Task not found or access denied"}
 
         if not task.completed:
-            return {"success": True, "message": f"Task '{task.title}' is already open"}
+            return {"task_id": task_id, "status": "already_open", "title": task.title}
 
         task.completed = False
         task.updated_at = datetime.utcnow()
         session.add(task)
         session.commit()
 
-        return {"success": True, "message": f"Task '{task.title}' reopened"}
+        return {"task_id": task_id, "status": "reopened", "title": task.title}
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 @mcp.tool()
@@ -226,15 +222,15 @@ def delete_task(user_id: str, task_id: int) -> dict:
         task = session.get(Task, task_id)
 
         if not task or task.user_id != user_id:
-            return {"success": False, "error": "Task not found or access denied"}
+            return {"error": "Task not found or access denied"}
 
         title = task.title
         session.delete(task)
         session.commit()
 
-        return {"success": True, "message": f"Task '{title}' deleted"}
+        return {"task_id": task_id, "status": "deleted", "title": title}
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 @mcp.tool()
@@ -266,13 +262,13 @@ def update_task(
         task = session.get(Task, task_id)
 
         if not task or task.user_id != user_id:
-            return {"success": False, "error": "Task not found or access denied"}
+            return {"error": "Task not found or access denied"}
 
         updated_fields = []
 
         if title is not None:
             if len(title) > 200:
-                return {"success": False, "error": "Title must be 200 characters or less"}
+                return {"error": "Title must be 200 characters or less"}
             task.title = title
             updated_fields.append("title")
 
@@ -283,7 +279,7 @@ def update_task(
         if priority is not None:
             valid_priorities = ["High", "Medium", "Low"]
             if priority not in valid_priorities:
-                return {"success": False, "error": f"Invalid priority. Use: {', '.join(valid_priorities)}"}
+                return {"error": f"Invalid priority. Use: {', '.join(valid_priorities)}"}
             task.priority = priority
             updated_fields.append("priority")
 
@@ -296,22 +292,22 @@ def update_task(
                 task.due_date = date.fromisoformat(due_date) if due_date else None
                 updated_fields.append("due_date")
             except ValueError:
-                return {"success": False, "error": "Invalid due date format. Use YYYY-MM-DD"}
+                return {"error": "Invalid due date format. Use YYYY-MM-DD"}
 
         if not updated_fields:
-            return {"success": True, "message": "No changes made", "updated_fields": []}
+            return {"task_id": task_id, "status": "no_changes", "title": task.title}
 
         task.updated_at = datetime.utcnow()
         session.add(task)
         session.commit()
 
         return {
-            "success": True,
-            "message": "Task updated successfully",
-            "updated_fields": updated_fields
+            "task_id": task_id,
+            "status": "updated",
+            "title": task.title
         }
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 @mcp.tool()
@@ -319,7 +315,7 @@ def search_tasks(
     user_id: str,
     query: str,
     limit: int = 20,
-) -> dict:
+) -> list[dict] | dict:
     """Search tasks by keyword.
 
     Args:
@@ -331,7 +327,7 @@ def search_tasks(
         dict with matching tasks and count
     """
     if not query or len(query.strip()) == 0:
-        return {"success": False, "error": "Search query is required"}
+        return {"error": "Search query is required"}
 
     limit = min(limit, 100)
     search_term = f"%{query.lower()}%"
@@ -352,25 +348,20 @@ def search_tasks(
         )
         tasks = session.exec(statement).all()
 
-        return {
-            "success": True,
-            "count": len(tasks),
-            "query": query,
-            "tasks": [
-                {
-                    "id": task.id,
-                    "title": task.title,
-                    "description": task.description,
-                    "completed": task.completed,
-                    "priority": task.priority,
-                    "tags": task.tags,
-                    "due_date": task.due_date.isoformat() if task.due_date else None,
-                }
-                for task in tasks
-            ]
-        }
+        return [
+            {
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "completed": task.completed,
+                "priority": task.priority,
+                "tags": task.tags,
+                "due_date": task.due_date.isoformat() if task.due_date else None,
+            }
+            for task in tasks
+        ]
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 @mcp.tool()
@@ -416,19 +407,16 @@ def get_task_analytics(user_id: str) -> dict:
         )
 
         return {
-            "success": True,
-            "analytics": {
-                "total_tasks": total_tasks,
-                "completed_tasks": completed_tasks,
-                "pending_tasks": pending_tasks,
-                "completion_rate": round(completion_rate, 1),
-                "by_priority": by_priority,
-                "overdue_tasks": overdue_tasks,
-                "tasks_due_today": tasks_due_today,
-            }
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "pending_tasks": pending_tasks,
+            "completion_rate": round(completion_rate, 1),
+            "by_priority": by_priority,
+            "overdue_tasks": overdue_tasks,
+            "tasks_due_today": tasks_due_today,
         }
     except Exception as e:
-        return {"success": False, "error": "Database error occurred"}
+        return {"error": "Database error occurred"}
 
 
 # Export the MCP server instance

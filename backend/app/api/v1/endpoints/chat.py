@@ -11,12 +11,113 @@ from app.schemas.chat import (
     ConversationWithMessagesResponse,
     ConversationListResponse,
     TitleGenerationResponse,
+    UnifiedChatRequest,
+    UnifiedChatResponse,
+    ToolCallInfo,
 )
 from app.services.conversation_service import ConversationService
 from app.services.ai.agents.orchestrator import process_message, get_agent_icon
 from app.middleware.rate_limit import check_rate_limit
 
 router = APIRouter()
+
+
+@router.post("", response_model=UnifiedChatResponse)
+async def unified_chat(
+    request: UnifiedChatRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    """Send a message and get AI response.
+
+    Creates a new conversation if conversation_id is not provided.
+    Rate limited to 5 messages per minute per user.
+    Message content limited to 1000 characters.
+
+    This is the primary chat interface that handles both new and existing
+    conversations in a single endpoint.
+    """
+    # Check rate limit
+    await check_rate_limit(current_user)
+
+    service = ConversationService(session)
+
+    # Auto-create conversation if not provided
+    if request.conversation_id:
+        conversation = service.get_conversation(request.conversation_id, current_user)
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+    else:
+        try:
+            conversation = service.create_conversation(current_user)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+
+    # Save user message
+    user_message = service.add_message(
+        conversation_id=conversation.id,
+        user_id=current_user,
+        role="user",
+        content=request.message,
+    )
+
+    if not user_message:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save message"
+        )
+
+    # Get conversation history for context
+    messages = service.get_messages(conversation.id, current_user)
+    conversation_history = [
+        {"role": msg.role, "content": msg.content}
+        for msg in messages[:-1]  # Exclude the message we just added
+    ]
+
+    # Process message through AI orchestrator
+    result = await process_message(
+        user_id=current_user,
+        message=request.message,
+        conversation_history=conversation_history,
+    )
+
+    # Save assistant response
+    assistant_message = service.add_message(
+        conversation_id=conversation.id,
+        user_id=current_user,
+        role="assistant",
+        content=result.get("content", "I'm sorry, I couldn't process that request."),
+        agent_name=result.get("agent_name", "Aren"),
+        agent_icon=result.get("agent_icon", "🤖"),
+    )
+
+    if not assistant_message:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save AI response"
+        )
+
+    # Extract tool calls from result (now a simple list of strings)
+    tool_calls = []
+    if "tool_calls" in result and result["tool_calls"]:
+        tool_calls = [
+            ToolCallInfo(tool_name=tc, success=True)
+            for tc in result["tool_calls"]
+        ]
+
+    return UnifiedChatResponse(
+        conversation_id=conversation.id,
+        response=assistant_message.content,
+        tool_calls=tool_calls,
+        agent_name=result.get("agent_name", "Aren"),
+        agent_icon=result.get("agent_icon", "🤖"),
+    )
 
 
 @router.post("/conversations", response_model=ConversationResponse)
@@ -191,6 +292,7 @@ async def send_message(
         ),
         agent_name=result.get("agent_name", "Aren"),
         agent_icon=result.get("agent_icon", "🤖"),
+        tool_calls=result.get("tool_calls", []),
     )
 
 

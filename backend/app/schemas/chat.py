@@ -40,6 +40,10 @@ class ChatResponse(BaseModel):
     message: MessageResponse = Field(..., description="The AI response message")
     agent_name: str = Field(..., description="Name of the responding agent")
     agent_icon: str = Field(..., description="Icon of the responding agent (emoji)")
+    tool_calls: list[str] = Field(
+        default_factory=list,
+        description="List of MCP tools invoked during the request"
+    )
 
 
 class ConversationResponse(BaseModel):
@@ -84,3 +88,41 @@ class ErrorResponse(BaseModel):
     """Response schema for errors."""
 
     detail: str = Field(..., description="Error message")
+
+
+class UnifiedChatRequest(BaseModel):
+    """Request schema for unified chat endpoint.
+
+    Creates a new conversation if conversation_id is not provided.
+    """
+
+    conversation_id: Optional[str] = Field(
+        default=None,
+        description="Existing conversation ID (creates new if not provided)"
+    )
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="User's natural language message (max 1000 characters)"
+    )
+
+
+class ToolCallInfo(BaseModel):
+    """Information about an MCP tool call."""
+
+    tool_name: str = Field(..., description="Name of the MCP tool invoked")
+    success: bool = Field(..., description="Whether the tool call succeeded")
+
+
+class UnifiedChatResponse(BaseModel):
+    """Response schema for unified chat endpoint."""
+
+    conversation_id: str = Field(..., description="The conversation ID")
+    response: str = Field(..., description="AI assistant's response")
+    tool_calls: list[ToolCallInfo] = Field(
+        default_factory=list,
+        description="List of MCP tools invoked during processing"
+    )
+    agent_name: str = Field(default="Aren", description="Name of the responding agent")
+    agent_icon: str = Field(default="🤖", description="Icon of the responding agent")

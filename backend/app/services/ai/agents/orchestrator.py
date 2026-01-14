@@ -9,6 +9,7 @@ import os
 import sys
 from agents import Agent, Runner
 from agents.mcp import MCPServerStdio
+from agents.items import ToolCallItem
 
 from app.services.ai.agents.language_agents import (
     create_english_agent,
@@ -127,11 +128,24 @@ async def process_message(user_id: str, message: str, conversation_history: list
             # Use last_agent to track which agent handled the request after handoffs
             current_agent = result.last_agent if hasattr(result, 'last_agent') else orchestrator
 
+            # Extract tool calls from new_items
+            tool_calls: list[str] = []
+            if hasattr(result, 'new_items') and result.new_items:
+                for item in result.new_items:
+                    if isinstance(item, ToolCallItem):
+                        raw_item = item.raw_item
+                        # Extract tool name from raw_item (supports MCP calls and function calls)
+                        if hasattr(raw_item, 'name'):
+                            tool_calls.append(raw_item.name)
+                        elif isinstance(raw_item, dict) and 'name' in raw_item:
+                            tool_calls.append(raw_item['name'])
+
             return {
                 "success": True,
                 "content": response_content,
                 "agent_name": current_agent.name if current_agent else "Aren",
                 "agent_icon": get_agent_icon(current_agent.name if current_agent else "Aren"),
+                "tool_calls": tool_calls,
             }
         except ConnectionError:
             return {
@@ -140,6 +154,7 @@ async def process_message(user_id: str, message: str, conversation_history: list
                 "content": "I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
                 "agent_name": "Aren",
                 "agent_icon": "🤖",
+                "tool_calls": [],
             }
         except TimeoutError:
             return {
@@ -148,6 +163,7 @@ async def process_message(user_id: str, message: str, conversation_history: list
                 "content": "The request took too long to process. Please try again with a simpler request.",
                 "agent_name": "Aren",
                 "agent_icon": "🤖",
+                "tool_calls": [],
             }
         except ValueError as e:
             return {
@@ -156,6 +172,7 @@ async def process_message(user_id: str, message: str, conversation_history: list
                 "content": "I couldn't understand that request. Could you please rephrase it?",
                 "agent_name": "Aren",
                 "agent_icon": "🤖",
+                "tool_calls": [],
             }
         except Exception as e:
             # Log the error for debugging
@@ -168,6 +185,7 @@ async def process_message(user_id: str, message: str, conversation_history: list
                 "content": "I'm sorry, I encountered an unexpected error. Please try again or contact support if the issue persists.",
                 "agent_name": "Aren",
                 "agent_icon": "🤖",
+                "tool_calls": [],
             }
 
 
