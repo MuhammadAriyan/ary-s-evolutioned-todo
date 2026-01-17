@@ -28,7 +28,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-backend-domain.hf.space/api/:path*"
+      "destination": "https://maryanrar-ary-todo-backend.hf.space/api/:path*"
     }
   ],
   "env": {
