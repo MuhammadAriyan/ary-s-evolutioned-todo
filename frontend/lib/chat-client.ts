@@ -221,10 +221,11 @@ export async function* streamMessage(
 
   if (!response.ok) {
     // Log detailed error information for debugging
-    console.error('Chat stream error:', {
+    console.error('🔴 Chat stream error:', {
       status: response.status,
       statusText: response.statusText,
       url: response.url,
+      headers: Object.fromEntries(response.headers.entries()),
     })
 
     // Try to get error details from response body
@@ -232,19 +233,24 @@ export async function* streamMessage(
     try {
       const errorData = await response.json()
       errorDetail = errorData.detail || errorData.message || response.statusText
-      console.error('Error details:', errorData)
-    } catch {
+      console.error('🔴 Error response body:', errorData)
+    } catch (e) {
       // Response body is not JSON, use statusText
+      console.error('🔴 Could not parse error response:', e)
     }
 
+    // Create detailed error messages
     if (response.status === 401) {
-      throw new Error('Authentication failed. Please log in again.')
+      throw new Error(`Auth failed (401): ${errorDetail}. Token present: ${!!token}`)
     }
     if (response.status === 404) {
-      throw new Error('Chat endpoint not found. Please refresh the page.')
+      throw new Error(`Endpoint not found (404): ${response.url}`)
     }
     if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please wait a moment.')
+    }
+    if (response.status === 403) {
+      throw new Error(`Access forbidden (403): ${errorDetail}. Check CORS configuration.`)
     }
     throw new Error(`Chat error (${response.status}): ${errorDetail}`)
   }

@@ -365,12 +365,26 @@ export function useChat(): UseChatReturn {
       // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== tempUserMessage.id))
 
+      // Create detailed error message for debugging
+      let errorMessage = 'Failed to send message'
+      if (err instanceof Error) {
+        errorMessage = err.message
+        // Add more context for debugging
+        console.error('🔴 Chat Error Details:', {
+          message: err.message,
+          stack: err.stack,
+          tokenPresent: !!tokenRef.current,
+          tokenLength: tokenRef.current?.length,
+        })
+      }
+
       if (err instanceof Error && err.message.includes('429')) {
         setError('Rate limit exceeded. Please wait a moment before sending another message.')
       } else if (err instanceof Error && err.message === 'Unauthorized') {
         setError('Session expired. Please log in again.')
       } else {
-        setError(err instanceof Error ? err.message : 'Failed to send message')
+        // Show detailed error for debugging
+        setError(`${errorMessage} (Check console for details)`)
       }
     } finally {
       setIsSending(false)
