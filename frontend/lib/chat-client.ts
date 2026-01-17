@@ -185,13 +185,17 @@ export async function* streamMessage(
     headers['Authorization'] = `Bearer ${token}`
   }
 
+  // Use direct fetch for streaming (no retry, no timeout)
+  // Streaming connections need to stay open indefinitely while AI processes
   let response: Response
   try {
-    response = await fetchWithRetry(`${API_URL}${CHAT_BASE}/stream`, {
+    response = await fetch(`${API_URL}${CHAT_BASE}/stream`, {
       method: 'POST',
       headers,
       body: JSON.stringify(request),
       signal: options.signal,
+      // Keep connection alive - no timeout
+      keepalive: true,
     })
   } catch (error) {
     // Handle network errors (offline, DNS failure, etc.)
