@@ -15,7 +15,10 @@ import type {
 } from '@/types/chat'
 
 const CHAT_BASE = '/api/v1/chat'
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+// Use relative URL in production (leverages Vercel proxy), absolute in development
+const API_URL = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+  ? '' // Production: use relative URLs to leverage Vercel proxy
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000' // Development: use localhost
 
 /**
  * Fetch with exponential backoff retry logic

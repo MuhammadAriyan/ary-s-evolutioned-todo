@@ -30,9 +30,10 @@ const nextConfig = {
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['framer-motion', '@tanstack/react-query', 'recharts'],
-    // Exclude large ML packages from server components (they're only used client-side)
-    serverComponentsExternalPackages: ['@huggingface/transformers', 'sharp', 'onnxruntime-node'],
   },
+
+  // Exclude large ML packages from server components (they're only used client-side)
+  serverExternalPackages: ['@huggingface/transformers', 'sharp', 'onnxruntime-node'],
 
   // Production optimizations
   poweredByHeader: false,
