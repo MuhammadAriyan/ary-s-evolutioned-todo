@@ -235,12 +235,16 @@ export function useChat(): UseChatReturn {
     content: string,
     options: { languageHint?: LanguageHint } = {}
   ) => {
+    console.log('🚀 sendStreamingMessage called with:', { content, hasToken: !!tokenRef.current })
+
     if (!content.trim()) {
+      console.log('⚠️ Empty content, returning')
       return
     }
 
     if (!tokenRef.current) {
       console.error('❌ useChat: No token in tokenRef!')
+      alert('DEBUG: No authentication token found!')
       setError('Not authenticated')
       return
     }

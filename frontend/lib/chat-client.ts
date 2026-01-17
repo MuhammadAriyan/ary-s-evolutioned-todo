@@ -231,8 +231,10 @@ export async function* streamMessage(
       const errorData = await response.json()
       errorDetail = errorData.detail || errorData.message || response.statusText
       console.error('❌ Error details:', errorData)
+      alert(`DEBUG: Chat error ${response.status}: ${errorDetail}`)
     } catch {
       // Response body is not JSON, use statusText
+      alert(`DEBUG: Chat error ${response.status}: ${response.statusText}`)
     }
 
     if (response.status === 401) {
