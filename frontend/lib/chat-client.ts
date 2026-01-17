@@ -186,7 +186,13 @@ export async function* streamMessage(
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
+    console.log('🔑 Chat: Token present, length:', token.length)
+  } else {
+    console.error('❌ Chat: No token provided!')
   }
+
+  console.log('📡 Chat: Sending request to:', `${API_URL}${CHAT_BASE}/stream`)
+  console.log('📡 Chat: Headers:', Object.keys(headers))
 
   // Use direct fetch for streaming (no retry, no timeout)
   // Streaming connections need to stay open indefinitely while AI processes

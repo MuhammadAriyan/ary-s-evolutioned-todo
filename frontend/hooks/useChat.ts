@@ -94,11 +94,12 @@ export function useChat(): UseChatReturn {
           const { data, error } = await authClient.token()
 
           if (data?.token) {
+            console.log('✅ useChat: Token fetched successfully, length:', data.token.length)
             apiClient.setToken(data.token)
             tokenRef.current = data.token
             setTokenReady(true)
           } else if (error) {
-            console.error('Failed to retrieve JWT token for chat:', error)
+            console.error('❌ useChat: Failed to retrieve JWT token:', error)
             apiClient.clearToken()
             tokenRef.current = null
             setTokenReady(false)
@@ -239,10 +240,12 @@ export function useChat(): UseChatReturn {
     }
 
     if (!tokenRef.current) {
+      console.error('❌ useChat: No token in tokenRef!')
       setError('Not authenticated')
       return
     }
 
+    console.log('✅ useChat: Token available, length:', tokenRef.current.length)
     setIsSending(true)
     setError(null)
 
