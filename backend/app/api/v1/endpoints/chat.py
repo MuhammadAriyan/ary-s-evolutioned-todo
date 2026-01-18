@@ -428,6 +428,11 @@ async def stream_chat(
         final_agent_name = "Aren"
         final_agent_icon = "🤖"
 
+        # DEBUG: Emit test event to confirm streaming works
+        import logging
+        logging.info(f"🟢 Starting stream for user {current_user}, message: {request.message[:50]}")
+        yield f"data: {json.dumps({'type': 'token', 'content': '🟢 Stream started...'})}\n\n"
+
         # Emit conversation_created event if new conversation
         if conversation_created:
             yield f"data: {json.dumps({'type': 'conversation_created', 'conversation_id': conversation.id})}\n\n"
