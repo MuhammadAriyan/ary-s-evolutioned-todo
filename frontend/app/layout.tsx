@@ -4,7 +4,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { PageWrapper } from "@/components/layout/PageWrapper"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Analytics } from '@vercel/analytics/react'
 import { useState } from 'react'
 
 // Optimize font loading with next/font
@@ -46,7 +45,6 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <QueryClientProvider client={queryClient}>
           <PageWrapper>{children}</PageWrapper>
-          <Analytics />
         </QueryClientProvider>
       </body>
     </html>
