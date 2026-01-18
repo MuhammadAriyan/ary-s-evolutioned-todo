@@ -282,6 +282,7 @@ export async function* streamMessage(
           const jsonStr = line.slice(6) // Remove 'data: ' prefix
           try {
             const event = JSON.parse(jsonStr) as StreamEvent
+            console.log('📥 SSE Event received:', event.type, event)
             yield event
           } catch (e) {
             console.warn('Failed to parse SSE event:', jsonStr)

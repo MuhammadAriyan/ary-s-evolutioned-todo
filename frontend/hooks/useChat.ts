@@ -284,7 +284,10 @@ export function useChat(): UseChatReturn {
       )
 
       for await (const event of stream) {
+        console.log('🔄 Processing event:', event.type, event)
+
         if (isConversationCreatedEvent(event)) {
+          console.log('✅ Conversation created:', event.conversation_id)
           newConversationId = event.conversation_id
           // Create new conversation in state
           const newConv: Conversation = {
@@ -296,12 +299,14 @@ export function useChat(): UseChatReturn {
           setConversations(prev => [newConv, ...prev])
           setCurrentConversation({ ...newConv, messages: [] })
         } else if (isTokenEvent(event)) {
+          console.log('📝 Token received:', event.content)
           finalContent += event.content
           setStreaming(prev => ({
             ...prev,
             content: prev.content + event.content,
           }))
         } else if (isAgentChangeEvent(event)) {
+          console.log('🤖 Agent changed:', event.agent, event.icon)
           finalAgentName = event.agent
           finalAgentIcon = event.icon
           setStreaming(prev => ({
@@ -310,13 +315,18 @@ export function useChat(): UseChatReturn {
             agentIcon: event.icon,
           }))
         } else if (isToolCallEvent(event)) {
+          console.log('🔧 Tool called:', event.tool)
           setStreaming(prev => ({
             ...prev,
             toolCalls: [...prev.toolCalls, event.tool],
           }))
         } else if (isDoneEvent(event)) {
+          console.log('✅ Stream done. Message ID:', event.message_id)
+          console.log('📊 Final content length:', finalContent.length)
+          console.log('📊 Final content preview:', finalContent.substring(0, 100))
           messageId = event.message_id
         } else if (isErrorEvent(event)) {
+          console.error('❌ Stream error event:', event.message)
           throw new Error(event.message)
         }
       }

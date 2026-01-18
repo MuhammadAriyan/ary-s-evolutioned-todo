@@ -286,10 +286,15 @@ async def process_message_streamed(
             logger.info(f"✅ Runner.run_streamed returned: {type(result).__name__}")
 
             logger.info(f"🔄 Starting stream processing for user {user_id}")
+            print(f"🚀 BACKEND: Starting AI stream for user {user_id}")
+            print(f"📝 BACKEND: User message: {message[:100]}...")
+
             event_count = 0
+            token_count = 0
             async for event in result.stream_events():
                 event_count += 1
                 logger.info(f"📨 Stream event #{event_count}: {type(event).__name__}")
+                print(f"📨 BACKEND: Event #{event_count}: {type(event).__name__}")
 
                 # Handle raw response events (contains text deltas)
                 if isinstance(event, RawResponsesStreamEvent):
@@ -302,6 +307,8 @@ async def process_message_streamed(
                         if hasattr(data, 'type'):
                             if data.type == 'response.output_text.delta':
                                 if hasattr(data, 'delta') and data.delta:
+                                    token_count += 1
+                                    print(f"📝 BACKEND: Token #{token_count}: '{data.delta}'")
                                     accumulated_content += data.delta
                                     yield {"type": "token", "content": data.delta}
                             elif data.type == 'response.content_part.delta':
@@ -309,6 +316,8 @@ async def process_message_streamed(
                                 if hasattr(data, 'delta') and data.delta:
                                     text = getattr(data.delta, 'text', None)
                                     if text:
+                                        token_count += 1
+                                        print(f"📝 BACKEND: Token #{token_count}: '{text}'")
                                         accumulated_content += text
                                         yield {"type": "token", "content": text}
 
@@ -340,13 +349,20 @@ async def process_message_streamed(
             final_result = accumulated_content if accumulated_content else (result.final_output or "")
             logger.debug(f"Streaming complete. Accumulated: {len(accumulated_content)} chars, final_output: {result.final_output[:100] if result.final_output else 'None'}...")
 
+            print(f"✅ BACKEND: Stream complete!")
+            print(f"📊 BACKEND: Total events: {event_count}, Total tokens: {token_count}")
+            print(f"📊 BACKEND: Accumulated content length: {len(accumulated_content)} chars")
+            print(f"📊 BACKEND: Final content preview: {final_result[:200]}...")
+
             # Check for agent change at the end
             if hasattr(result, 'last_agent') and result.last_agent:
                 final_agent = result.last_agent.name
                 if final_agent != current_agent_name:
+                    print(f"🤖 BACKEND: Agent changed to {final_agent}")
                     yield {"type": "agent_change", "agent": final_agent, "icon": get_agent_icon(final_agent)}
 
             # Signal completion with the final content
+            print(f"🏁 BACKEND: Sending done event")
             yield {"type": "done", "message_id": "", "content": final_result}
 
     except ConnectionError:
