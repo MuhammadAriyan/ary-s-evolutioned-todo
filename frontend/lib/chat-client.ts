@@ -262,37 +262,16 @@ export async function* streamMessage(
 
   const decoder = new TextDecoder()
   let buffer = ''
-  let eventCount = 0
-
-  alert('🟢 STREAM STARTED - Check console now!')
-  console.log('🟢 Stream started, reading data...')
 
   try {
     while (true) {
-      let result: ReadableStreamReadResult<Uint8Array>
-      try {
-        result = await reader.read()
-      } catch (error) {
-        alert('🔴 STREAM READ ERROR: ' + error)
-        console.error('🔴 Stream read error:', error)
-        // Handle stream read errors (connection dropped, etc.)
-        if (error instanceof TypeError) {
-          throw new Error('Connection lost during streaming')
-        }
-        throw error
-      }
-
-      const { done, value } = result
+      const { done, value } = await reader.read()
 
       if (done) {
-        alert(`🟢 STREAM ENDED - Got ${eventCount} events`)
-        console.log(`🟢 Stream ended. Total events: ${eventCount}`)
         break
       }
 
-      const chunk = decoder.decode(value, { stream: true })
-      console.log('📦 Received chunk:', chunk.substring(0, 100))
-      buffer += chunk
+      buffer += decoder.decode(value, { stream: true })
 
       // Process complete SSE messages (separated by double newlines)
       const lines = buffer.split('\n\n')
@@ -303,19 +282,13 @@ export async function* streamMessage(
           const jsonStr = line.slice(6) // Remove 'data: ' prefix
           try {
             const event = JSON.parse(jsonStr) as StreamEvent
-            console.log('✅ Parsed event:', event.type)
-            eventCount++
             yield event
           } catch (e) {
-            console.error('🔴 Failed to parse SSE event:', jsonStr, e)
+            console.warn('Failed to parse SSE event:', jsonStr)
           }
         }
       }
     }
-  } catch (error) {
-    console.error('🔴 Stream processing error:', error)
-    throw error
-  }
 
     // Process any remaining data in buffer
     if (buffer.startsWith('data: ')) {
@@ -327,6 +300,9 @@ export async function* streamMessage(
         // Ignore incomplete final message
       }
     }
+  } catch (error) {
+    console.error('Stream processing error:', error)
+    throw error
   } finally {
     reader.releaseLock()
   }
