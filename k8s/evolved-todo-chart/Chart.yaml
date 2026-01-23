@@ -1,0 +1,15 @@
+apiVersion: v2
+name: evolved-todo
+description: A Helm chart for Evolved Todo - Full-stack AI-powered todo application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - todo
+  - ai
+  - chatbot
+  - nextjs
+  - fastapi
+maintainers:
+  - name: Ary
+    email: ary@example.com

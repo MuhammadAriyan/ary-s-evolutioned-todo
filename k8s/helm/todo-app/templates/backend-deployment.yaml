@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.backend.name }}
+    component: api
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+        component: api
+    spec:
+      containers:
+      - name: backend
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.backend.service.port }}
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.backend.name }}-secrets
+              key: DATABASE_URL
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.backend.name }}-secrets
+              key: JWT_SECRET_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.backend.name }}-secrets
+              key: OPENAI_API_KEY
+        - name: CORS_ORIGINS
+          value: {{ .Values.backend.env.corsOrigins | quote }}
+        - name: PORT
+          value: {{ .Values.backend.env.port | quote }}
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.backend.service.port }}
+          initialDelaySeconds: {{ .Values.backend.healthCheck.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.backend.healthCheck.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.backend.healthCheck.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.backend.healthCheck.liveness.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.backend.service.port }}
+          initialDelaySeconds: {{ .Values.backend.healthCheck.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.backend.healthCheck.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.backend.healthCheck.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.backend.healthCheck.readiness.failureThreshold }}

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: todo-app
+description: A Helm chart for Ary's Evolved Todo application with AI chatbot
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - todo
+  - ai
+  - chatbot
+  - fastapi
+  - nextjs
+maintainers:
+  - name: Ary
+    email: ary@example.com
