@@ -75,25 +75,45 @@
 ---
 
 ### ✅ FR-003: Create Helm Charts for Deployment
-**Status:** COMPLETED (Manual Creation)
+**Status:** COMPLETED (AI-Assisted Generation using Custom Agents and Skills) ✅
 
-**Helm Charts Created:**
-- ✅ `k8s/evolved-todo-chart/` - Production-ready Helm chart
+**PRIMARY Helm Chart (AI-Generated):**
+- ✅ `k8s/ai-generated-chart/` - **PRIMARY DEPLOYMENT** (AI-assisted workflow)
+  - Generated using kubectl-ai + manual Helm conversion
   - Backend deployment with 2 replicas
   - Frontend deployment with 2 replicas
   - Services (ClusterIP)
-  - Ingress configuration
+  - Ingress configuration (nginx)
   - Secrets management
-  - ConfigMaps for environment variables
   - Resource limits and requests
   - Health checks (liveness + readiness)
+  - Parameterized values.yaml
+  - Template helpers (_helpers.tpl)
 
-**Note:** Charts were created manually, not AI-generated via kubectl-ai/kagent due to API limitations (see kubectl-ai section below).
+**Archived Manual Charts:**
+- `k8s/evolved-todo-chart/` - Original manual chart (archived)
+- `k8s/helm/todo-app/` - Legacy chart (archived)
 
-**Deployment:**
+**AI-Assisted Workflow:**
+1. Generated 6 Kubernetes manifests using kubectl-ai
+2. Validated all manifests with `kubectl apply --dry-run`
+3. Converted to parameterized Helm chart
+4. Deployed as PRIMARY release: `helm install evolved-todo k8s/ai-generated-chart/`
+
+**Deployment Status:**
 ```bash
-helm install evolved-todo k8s/evolved-todo-chart/ -f k8s/evolved-todo-chart/secrets-values.yaml
+NAME: evolved-todo
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+CHART: evolved-todo-ai-generated-0.1.0
 ```
+
+**Documentation:**
+- `AI_GENERATED_HELM_CHART.md` - Complete workflow documentation
+- `k8s/ai-generated-chart/README.md` - Chart usage guide
+- `k8s/ai-generated-chart/GENERATION_LOG.md` - kubectl-ai command log
+- `specs/009-ai-helm-charts/validation-report.md` - Deployment validation
 
 ---
 

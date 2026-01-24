@@ -1,0 +1,14 @@
+apiVersion: v2
+name: evolved-todo-ai-generated
+description: AI-generated Helm chart for Evolved Todo application using kubectl-ai
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - todo
+  - fastapi
+  - nextjs
+  - ai-generated
+maintainers:
+  - name: kubectl-ai
+    email: noreply@example.com
