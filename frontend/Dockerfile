@@ -8,8 +8,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-# Install production dependencies only for smaller image
-RUN npm ci --only=production
+# Install all dependencies (needed for build)
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
