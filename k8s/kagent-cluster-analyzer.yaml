@@ -1,0 +1,39 @@
+apiVersion: kagent.dev/v1alpha1
+kind: Agent
+metadata:
+  name: cluster-analyzer
+  namespace: kagent-system
+spec:
+  modelConfig:
+    provider: Gemini
+    model: gemini-2.0-flash
+    apiKey:
+      secretRef:
+        name: kagent-gemini-secret
+        key: api-key
+  systemPrompt: |
+    You are a Kubernetes cluster analyzer agent.
+    Your role is to:
+    1. Analyze cluster health and resource utilization
+    2. Identify potential issues with deployments, pods, and services
+    3. Provide optimization recommendations
+    4. Focus on the evolved-todo application deployment
+
+    When analyzing:
+    - Check pod status, restarts, and resource usage
+    - Verify service connectivity
+    - Review ingress configuration
+    - Identify any warnings or errors in events
+    - Suggest improvements for reliability and performance
+  tools:
+    - kubectl
+  permissions:
+    - apiGroups: [""]
+      resources: ["pods", "services", "events", "nodes"]
+      verbs: ["get", "list", "describe"]
+    - apiGroups: ["apps"]
+      resources: ["deployments", "replicasets"]
+      verbs: ["get", "list", "describe"]
+    - apiGroups: ["networking.k8s.io"]
+      resources: ["ingresses"]
+      verbs: ["get", "list", "describe"]

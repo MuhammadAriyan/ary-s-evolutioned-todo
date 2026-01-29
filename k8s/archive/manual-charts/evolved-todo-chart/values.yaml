@@ -1,0 +1,192 @@
+# Default values for evolved-todo Helm chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+replicaCount: 2
+
+# Backend (FastAPI) configuration
+backend:
+  name: backend
+  image:
+    repository: evolved-todo/api
+    tag: local
+    pullPolicy: Never  # Use local images, don't pull from registry
+
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health/ready
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  securityContext:
+    runAsUser: 1000
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+
+  env:
+    - name: PORT
+      value: "8000"
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: LOG_LEVEL
+      value: "info"
+    - name: CORS_ORIGINS
+      value: "http://todo.local,http://localhost:3000"
+    # Database URL from secret
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: evolved-todo-secrets
+          key: database-url
+    # JWT secret from secret
+    - name: JWT_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: evolved-todo-secrets
+          key: jwt-secret-key
+    # Better Auth secret from secret
+    - name: BETTER_AUTH_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: evolved-todo-secrets
+          key: better-auth-secret
+    # OpenAI API key from secret
+    - name: OPENAI_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: evolved-todo-secrets
+          key: openai-api-key
+
+# Frontend (Next.js) configuration
+frontend:
+  name: frontend
+  image:
+    repository: evolved-todo/web
+    tag: local
+    pullPolicy: Never  # Use local images, don't pull from registry
+
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 400m
+      memory: 512Mi
+
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  securityContext:
+    runAsUser: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+
+  env:
+    - name: NODE_ENV
+      value: "production"
+    - name: PORT
+      value: "3000"
+    - name: HOSTNAME
+      value: "0.0.0.0"
+    - name: NEXT_TELEMETRY_DISABLED
+      value: "1"
+    # Backend API URL
+    - name: NEXT_PUBLIC_API_URL
+      value: "http://evolved-todo-backend:8000"
+    # Better Auth secret from secret
+    - name: BETTER_AUTH_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: evolved-todo-secrets
+          key: better-auth-secret
+    # Better Auth URL
+    - name: BETTER_AUTH_URL
+      value: "http://todo.local"
+    # Database URL from secret (for Better Auth)
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: evolved-todo-secrets
+          key: database-url
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: frontend
+              port: 3000
+        - path: /api
+          pathType: Prefix
+          backend:
+            service:
+              name: backend
+              port: 8000
+
+# Secrets (values will be provided via --set or separate secrets file)
+secrets:
+  # Database connection string (Neon PostgreSQL)
+  databaseUrl: ""  # Set via: --set secrets.databaseUrl="postgresql://..."
+
+  # JWT secret key for authentication
+  jwtSecretKey: ""  # Set via: --set secrets.jwtSecretKey="your-secret"
+
+  # Better Auth secret
+  betterAuthSecret: ""  # Set via: --set secrets.betterAuthSecret="your-secret"
+
+  # OpenAI API key for AI features
+  openaiApiKey: ""  # Set via: --set secrets.openaiApiKey="sk-..."

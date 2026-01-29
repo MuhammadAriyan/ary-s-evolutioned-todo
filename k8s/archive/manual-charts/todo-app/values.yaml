@@ -1,0 +1,100 @@
+# Default values for todo-app Helm chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+namespace: default
+domain: todo.local
+
+# Frontend configuration
+frontend:
+  name: todo-frontend
+  replicaCount: 2
+  image:
+    repository: todo-frontend
+    tag: local
+    pullPolicy: Never
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    nodeEnv: production
+    port: "3000"
+  healthCheck:
+    liveness:
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Backend configuration
+backend:
+  name: todo-backend
+  replicaCount: 2
+  image:
+    repository: todo-backend
+    tag: local
+    pullPolicy: Never
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    port: "8000"
+    corsOrigins: '["http://todo.local","http://localhost:3000"]'
+  healthCheck:
+    liveness:
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  host: todo.local
+  paths:
+    api:
+      path: /api
+      pathType: Prefix
+      backend: backend
+    root:
+      path: /
+      pathType: Prefix
+      backend: frontend
+
+# Secrets (should be provided via --set or separate values file)
+secrets:
+  databaseUrl: "postgresql://user:password@host/database?sslmode=require"
+  jwtSecretKey: "your-jwt-secret-key-change-in-production"
+  openaiApiKey: "your-openai-api-key"
+  betterAuthSecret: "your-better-auth-secret-change-in-production"
+  googleClientId: ""
+  googleClientSecret: ""

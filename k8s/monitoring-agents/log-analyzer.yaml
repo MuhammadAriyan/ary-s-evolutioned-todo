@@ -1,0 +1,165 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: log-analyzer
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: log-analyzer
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: log-analyzer
+subjects:
+  - kind: ServiceAccount
+    name: log-analyzer
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: log-analyzer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log-analyzer-script
+  namespace: default
+data:
+  analyze.sh: |
+    #!/bin/bash
+    set -e
+
+    echo "=== Log Analysis Report ==="
+    echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+    echo ""
+
+    # Analyze recent events
+    echo "--- Recent Cluster Events (Last 30 minutes) ---"
+    kubectl get events --all-namespaces --sort-by='.lastTimestamp' | tail -50
+    echo ""
+
+    # Check for error events
+    echo "--- Error Events ---"
+    kubectl get events --all-namespaces --field-selector type=Warning --sort-by='.lastTimestamp' | tail -20 || echo "No warning events found"
+    echo ""
+
+    # Analyze evolved-todo logs for errors
+    echo "--- Evolved Todo Application Logs (Errors) ---"
+    echo "Backend Errors:"
+    kubectl logs -n default -l app.kubernetes.io/name=evolved-todo-backend --tail=50 --since=30m 2>/dev/null | grep -iE "(error|exception|fail|fatal)" | tail -20 || echo "No errors found in backend logs"
+    echo ""
+
+    echo "Frontend Errors:"
+    kubectl logs -n default -l app.kubernetes.io/name=evolved-todo-frontend --tail=50 --since=30m 2>/dev/null | grep -iE "(error|exception|fail|fatal)" | tail -20 || echo "No errors found in frontend logs"
+    echo ""
+
+    # Check for pods with errors
+    echo "--- Pods with Error Status ---"
+    kubectl get pods --all-namespaces --field-selector=status.phase=Failed || echo "No failed pods"
+    echo ""
+
+    # Check for CrashLoopBackOff pods
+    echo "--- Pods in CrashLoopBackOff ---"
+    kubectl get pods --all-namespaces -o json | \
+      jq -r '.items[] | select(.status.containerStatuses[]?.state.waiting?.reason == "CrashLoopBackOff") | "\(.metadata.namespace)/\(.metadata.name)"' || \
+      echo "No pods in CrashLoopBackOff"
+    echo ""
+
+    # Check for ImagePullBackOff pods
+    echo "--- Pods with ImagePullBackOff ---"
+    kubectl get pods --all-namespaces -o json | \
+      jq -r '.items[] | select(.status.containerStatuses[]?.state.waiting?.reason == "ImagePullBackOff" or .status.containerStatuses[]?.state.waiting?.reason == "ErrImagePull") | "\(.metadata.namespace)/\(.metadata.name)"' || \
+      echo "No pods with image pull issues"
+    echo ""
+
+    # Analyze container restart patterns
+    echo "--- Container Restart Analysis ---"
+    kubectl get pods --all-namespaces -o json | \
+      jq -r '.items[] | select(.status.containerStatuses[]?.restartCount > 0) | {
+        pod: "\(.metadata.namespace)/\(.metadata.name)",
+        restarts: [.status.containerStatuses[] | {container: .name, count: .restartCount, reason: .lastState.terminated.reason}]
+      }' | head -50 || echo "No container restarts detected"
+    echo ""
+
+    # Check for OOMKilled containers
+    echo "--- OOMKilled Containers ---"
+    kubectl get pods --all-namespaces -o json | \
+      jq -r '.items[] | select(.status.containerStatuses[]?.lastState.terminated.reason == "OOMKilled") | "\(.metadata.namespace)/\(.metadata.name): OOMKilled"' || \
+      echo "No OOMKilled containers found"
+    echo ""
+
+    # Summary and recommendations
+    echo "--- Analysis Summary ---"
+    echo "Total Pods: $(kubectl get pods --all-namespaces --no-headers | wc -l)"
+    echo "Running Pods: $(kubectl get pods --all-namespaces --field-selector=status.phase=Running --no-headers | wc -l)"
+    echo "Failed Pods: $(kubectl get pods --all-namespaces --field-selector=status.phase=Failed --no-headers | wc -l || echo 0)"
+    echo "Pending Pods: $(kubectl get pods --all-namespaces --field-selector=status.phase=Pending --no-headers | wc -l || echo 0)"
+    echo ""
+
+    echo "--- Recommendations ---"
+    echo "1. Review warning events for potential issues"
+    echo "2. Investigate pods with high restart counts"
+    echo "3. Check OOMKilled containers and adjust memory limits"
+    echo "4. Monitor CrashLoopBackOff pods for application errors"
+    echo "5. Verify image availability for ImagePullBackOff issues"
+    echo ""
+
+    echo "=== Log Analysis Report Complete ==="
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: log-analyzer
+  namespace: default
+  labels:
+    app: log-analyzer
+    component: monitoring
+spec:
+  schedule: "*/30 * * * *"  # Run every 30 minutes
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: log-analyzer
+        spec:
+          serviceAccountName: log-analyzer
+          restartPolicy: OnFailure
+          containers:
+          - name: analyzer
+            image: bitnami/kubectl:latest
+            imagePullPolicy: IfNotPresent
+            command:
+              - /bin/bash
+              - /scripts/analyze.sh
+            volumeMounts:
+              - name: script
+                mountPath: /scripts
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "100m"
+              limits:
+                memory: "128Mi"
+                cpu: "200m"
+          volumes:
+            - name: script
+              configMap:
+                name: log-analyzer-script
+                defaultMode: 0755

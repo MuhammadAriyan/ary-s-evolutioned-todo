@@ -1,0 +1,152 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: resource-optimizer
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: resource-optimizer
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "resourcequotas", "limitranges"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: resource-optimizer
+subjects:
+  - kind: ServiceAccount
+    name: resource-optimizer
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: resource-optimizer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resource-optimizer-script
+  namespace: default
+data:
+  optimize.sh: |
+    #!/bin/bash
+    set -e
+
+    echo "=== Resource Optimization Analysis Report ==="
+    echo "Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+    echo ""
+
+    # Check pods without resource limits
+    echo "--- Pods Without Resource Limits ---"
+    kubectl get pods --all-namespaces -o json | \
+      jq -r '.items[] | select(.spec.containers[].resources.limits == null or .spec.containers[].resources.limits == {}) | "\(.metadata.namespace)/\(.metadata.name)"' | \
+      head -20 || echo "All pods have resource limits defined"
+    echo ""
+
+    # Check pods without resource requests
+    echo "--- Pods Without Resource Requests ---"
+    kubectl get pods --all-namespaces -o json | \
+      jq -r '.items[] | select(.spec.containers[].resources.requests == null or .spec.containers[].resources.requests == {}) | "\(.metadata.namespace)/\(.metadata.name)"' | \
+      head -20 || echo "All pods have resource requests defined"
+    echo ""
+
+    # Analyze current resource usage vs requests
+    echo "--- Resource Usage vs Requests ---"
+    echo "Node Resource Utilization:"
+    kubectl top nodes 2>/dev/null || echo "Metrics server not available"
+    echo ""
+
+    echo "Top 10 CPU Consumers:"
+    kubectl top pods --all-namespaces --sort-by=cpu 2>/dev/null | head -11 || echo "Pod metrics not available"
+    echo ""
+
+    echo "Top 10 Memory Consumers:"
+    kubectl top pods --all-namespaces --sort-by=memory 2>/dev/null | head -11 || echo "Pod metrics not available"
+    echo ""
+
+    # Check for over-provisioned deployments
+    echo "--- Deployment Resource Configuration ---"
+    kubectl get deployments --all-namespaces -o json | \
+      jq -r '.items[] | "\(.metadata.namespace)/\(.metadata.name): Replicas=\(.spec.replicas), CPU Request=\(.spec.template.spec.containers[0].resources.requests.cpu // "none"), Memory Request=\(.spec.template.spec.containers[0].resources.requests.memory // "none")"' | \
+      head -20
+    echo ""
+
+    # Check evolved-todo resource configuration
+    echo "--- Evolved Todo Resource Analysis ---"
+    kubectl get deployments -n default -l app.kubernetes.io/instance=evolved-todo -o json | \
+      jq -r '.items[] | {
+        name: .metadata.name,
+        replicas: .spec.replicas,
+        containers: [.spec.template.spec.containers[] | {
+          name: .name,
+          requests: .resources.requests,
+          limits: .resources.limits
+        }]
+      }'
+    echo ""
+
+    # Recommendations
+    echo "--- Optimization Recommendations ---"
+    echo "1. Ensure all pods have resource requests and limits defined"
+    echo "2. Monitor actual usage and adjust requests/limits accordingly"
+    echo "3. Consider HPA for deployments with variable load"
+    echo "4. Review pods with high restart counts for resource issues"
+    echo "5. Check for pods in Pending state due to insufficient resources"
+    echo ""
+
+    echo "=== Resource Optimization Report Complete ==="
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: resource-optimizer
+  namespace: default
+  labels:
+    app: resource-optimizer
+    component: monitoring
+spec:
+  schedule: "0 */6 * * *"  # Run every 6 hours
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: resource-optimizer
+        spec:
+          serviceAccountName: resource-optimizer
+          restartPolicy: OnFailure
+          containers:
+          - name: optimizer
+            image: bitnami/kubectl:latest
+            imagePullPolicy: IfNotPresent
+            command:
+              - /bin/bash
+              - /scripts/optimize.sh
+            volumeMounts:
+              - name: script
+                mountPath: /scripts
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "100m"
+              limits:
+                memory: "128Mi"
+                cpu: "200m"
+          volumes:
+            - name: script
+              configMap:
+                name: resource-optimizer-script
+                defaultMode: 0755

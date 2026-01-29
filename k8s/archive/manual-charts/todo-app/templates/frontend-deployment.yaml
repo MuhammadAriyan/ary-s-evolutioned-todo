@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.frontend.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.frontend.name }}
+    component: web
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.frontend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.frontend.name }}
+        component: web
+    spec:
+      containers:
+      - name: frontend
+        image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+        imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.frontend.service.port }}
+          name: http
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: "http://{{ .Values.backend.name }}:{{ .Values.backend.service.port }}"
+        - name: BETTER_AUTH_URL
+          value: "http://{{ .Values.domain }}"
+        - name: BETTER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.backend.name }}-secrets
+              key: BETTER_AUTH_SECRET
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.backend.name }}-secrets
+              key: DATABASE_URL
+        - name: NODE_ENV
+          value: {{ .Values.frontend.env.nodeEnv | quote }}
+        - name: PORT
+          value: {{ .Values.frontend.env.port | quote }}
+        resources:
+          {{- toYaml .Values.frontend.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: {{ .Values.frontend.service.port }}
+          initialDelaySeconds: {{ .Values.frontend.healthCheck.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.frontend.healthCheck.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.frontend.healthCheck.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.frontend.healthCheck.liveness.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: {{ .Values.frontend.service.port }}
+          initialDelaySeconds: {{ .Values.frontend.healthCheck.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.frontend.healthCheck.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.frontend.healthCheck.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.frontend.healthCheck.readiness.failureThreshold }}

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.frontend.name }}
+  labels:
+    {{- include "evolved-todo-ai-generated.labels" . | nindent 4 }}
+    app: {{ .Values.frontend.name }}
+spec:
+  selector:
+    {{- include "evolved-todo-ai-generated.selectorLabels" . | nindent 4 }}
+    app: {{ .Values.frontend.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.targetPort }}
+  type: {{ .Values.frontend.service.type }}

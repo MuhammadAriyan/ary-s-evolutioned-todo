@@ -1,0 +1,93 @@
+# Default values for evolved-todo-ai-generated
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Backend configuration
+backend:
+  name: todo-backend
+  replicaCount: 2
+  image:
+    repository: todo-backend
+    tag: local
+    pullPolicy: Never
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 125m
+  env:
+    corsOrigins: "http://localhost:3000"
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+# Frontend configuration
+frontend:
+  name: todo-frontend
+  replicaCount: 2
+  image:
+    repository: todo-frontend
+    tag: local
+    pullPolicy: Never
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 250m
+  env:
+    apiUrl: "http://todo-backend:8000"
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  host: todo.local
+  paths:
+    - path: /api
+      pathType: Prefix
+      backend: backend
+      port: 8000
+    - path: /
+      pathType: Prefix
+      backend: frontend
+      port: 3000
+
+# Secrets configuration
+secrets:
+  name: todo-secrets
+  databaseUrl: "cG9zdGdyZXNxbDovL3VzZXI6cGFzc3dvcmRAbG9jYWxob3N0OjU0MzIvdG9kb19kYg=="  # base64 encoded: postgresql://user:password@localhost:5432/todo_db
